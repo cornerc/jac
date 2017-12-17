@@ -22,7 +22,7 @@
 %token <Int> ADDOP MULOP PPMM RELOP TYPE NUM CNUM
 %token <Dbl> RNUM
 %token <Name> ID STRING
-%token SBLOCK EBLOCK SBRACKET EBRACKET PERIOD EQUAL COMMA AMPERSAND EXCLAMATION
+%token SBLOCK EBLOCK SSBRACKET ESBRACKET SBRACKET EBRACKET PERIOD EQUAL COMMA AMPERSAND EXCLAMATION
  
 
 %type <Int> type_spec decl dim_list if_part 
@@ -64,12 +64,12 @@ declatr   : ID dim_list { $$ = VarDecl($1, $2); }
 		  ;
 
 dim_list  :  						{ $$ = 0; }
-		  | dim_list '[' ']' 		{ AStable[$1] = -1; $$ = $1 + 1; }
-		  | dim_list '[' NUM ']' 	{ AStable[$1] = $3; $$ = $1 + 1; }
+		  | dim_list SBRACKET EBRACKET 		{ AStable[$1] = -1; $$ = $1 + 1; }
+		  | dim_list SBRACKET NUM EBRACKET 	{ AStable[$1] = $3; $$ = $1 + 1; }
 		  ;
 
 f_head    : ID 						{ $<SymP>$ = MakeFuncEntry($1); }
-			SBRACKET p_list EBRACKET 			{ $$ = $<SymP>2; }
+			SSBRACKET p_list ESBRACKET 			{ $$ = $<SymP>2; }
 		  ;
 
 p_list    :
@@ -106,21 +106,21 @@ stmnt     : block
 		  | if_part ELSE         { $<Int>$ = PC(); Cout(JUMP, -1); Bpatch($1, PC()); }
 		    stmnt                { Bpatch($<Int>3, PC()); }
 		  | WHILE                { $<Int>$ = PC(); }
-		  	SBRACKET expr EBRACKET         { $<Int>$ = CtrlExpr($4, FJ); }
+		  	SSBRACKET expr ESBRACKET         { $<Int>$ = CtrlExpr($4, FJ); }
 		  	stmnt                { Cout(JUMP, $<Int>2); Bpatch($<Int>6, PC()); }
-		  | FOR SBRACKET opt_expr PERIOD { ExprStmnt($3); $<Int>$ = PC(); }
+		  | FOR SSBRACKET opt_expr PERIOD { ExprStmnt($3); $<Int>$ = PC(); }
 		  	opt_expr PERIOD         { $<Int>$ = CtrlExpr($6, FJ); }
-		  	opt_expr EBRACKET
+		  	opt_expr ESBRACKET
 		  	stmnt 				 { ExprStmnt($9); Cout(JUMP, $<Int>5); Bpatch($<Int>8, PC()); }
 		  | DO                   { $<Int>$ = PC(); }
 		  	stmnt WHILE
-		  	SBRACKET expr EBRACKET PERIOD     { Bpatch(CtrlExpr($6, TJ), $<Int>2); }
+		  	SSBRACKET expr ESBRACKET PERIOD     { Bpatch(CtrlExpr($6, TJ), $<Int>2); }
 		  | RETURN PERIOD           { GenReturn(FuncP, NULL); }
 		  | RETURN expr PERIOD      { GenReturn(FuncP, $2); }
 		  | error                { yyerrok; }
 		  ;
 
-if_part   : IF SBRACKET expr EBRACKET      { $<Int>$ = CtrlExpr($3, FJ); }
+if_part   : IF SSBRACKET expr ESBRACKET      { $<Int>$ = CtrlExpr($3, FJ); }
 		  	stmnt                { $$ = $<Int>5; }
 		  ;
 
@@ -138,18 +138,18 @@ expr      : primary EQUAL expr     { $$ = MakeN(ASSGN, $1, $3); }
 		  ;
 
 cast_expr : primary
-		  | SBRACKET TYPE EBRACKET cast_expr { $$ = TypeConv($4, $2); }
+		  | SSBRACKET TYPE ESBRACKET cast_expr { $$ = TypeConv($4, $2); }
 		  ;
 
 primary   : ADDOP primary %prec UM           { $$ = ($1 == SUB)? MakeN(CSIGN, $2, NULL): $2; }
 		  | PPMM primary                     { $$ = MakeN($1, $2, NULL); $$->etc = PRE; }
 		  | primary PPMM %prec POSOP         { $$ = MakeN($2, $1, NULL); $$->etc = POST; }
 		  | EXCLAMATION primary                      { $$ = MakeN(NOT, $2, NULL); }
-		  | READ SBRACKET primary COMMA primary EBRACKET { $$ = MakeN(INPUT, $3, $5); }
-		  | WRITE SBRACKET primary EBRACKET            { $$ = MakeN(OUTSTR, $3, NULL); }
-		  | WRITE SBRACKET primary COMMA expr EBRACKET   { $$ = MakeN(OUTPUT, $3, $5); }
-		  | ID SBRACKET arg_list EBRACKET              { $$ = MakeN(CALL, MakeL($1), $3); }
-		  | SBRACKET expr EBRACKET                     { $$ = $2; }
+		  | READ SSBRACKET primary COMMA primary ESBRACKET { $$ = MakeN(INPUT, $3, $5); }
+		  | WRITE SSBRACKET primary ESBRACKET            { $$ = MakeN(OUTSTR, $3, NULL); }
+		  | WRITE SSBRACKET primary COMMA expr ESBRACKET   { $$ = MakeN(OUTPUT, $3, $5); }
+		  | ID SSBRACKET arg_list ESBRACKET              { $$ = MakeN(CALL, MakeL($1), $3); }
+		  | SSBRACKET expr ESBRACKET                     { $$ = $2; }
 		  | ID sub_list                      { $$ = MakeN(AELM, MakeL($1), $2); }
 		  | ID                               { VAR_NODE($$, $1) }
 		  | STRING                           { MakeC($$, C_ARY, AllocCons($1, CBSZ, yyleng + 1)); }
@@ -158,8 +158,8 @@ primary   : ADDOP primary %prec UM           { $$ = ($1 == SUB)? MakeN(CSIGN, $2
 		  | RNUM                             { MakeC($$, DBL, Wcons($1)); }
 		  ;
 
-sub_list  : '[' expr ']'                     { $$ = $2; }
-		  | sub_list '[' expr ']'            { $$ = MakeN(SUBL, $1, $3); }
+sub_list  : SBRACKET expr EBRACKET                    { $$ = $2; }
+		  | sub_list SBRACKET expr EBRACKET            { $$ = MakeN(SUBL, $1, $3); }
 		  ;
 
 arg_list  :                                  { $$ = NULL; }

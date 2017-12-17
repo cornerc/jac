@@ -15,8 +15,10 @@ comma ","|、
 equal "="|＝
 s_block "{"|「
 e_block "}"|」
-s_bracket "("|（
-e_bracket ")"|）
+s_sbracket "("|（
+e_sbracket ")"|）
+s_bracket "["|『
+e_bracket "]"|』
 period ";"|。
 ampersand "＆"|&
 exclamation "！"|!
@@ -33,6 +35,8 @@ other .
 {comma} {return COMMA;}
 {s_block} {return SBLOCK;}
 {e_block} {return EBLOCK;}
+{s_sbracket} {return SSBRACKET;}
+{e_sbracket} {return ESBRACKET;}
 {s_bracket} {return SBRACKET;}
 {e_bracket} {return EBRACKET;}
 {period} { return PERIOD; }
