@@ -16,12 +16,12 @@ CodeGen.o : CodeGen.c CodeGen.h ExprTree.h SymTable.h VSME.h
  
 VSME.o : VSME.c VSME.h
  
-lex.yy.o : lex.yy.c y.tab.h SymTable.h
+lex.yy.o : lex.yy.c y.tab.h SymTable.h 
  
 lex.yy.c : MiniL.l
 	flex -l MiniL.l
   
-y.tab.o : y.tab.c VSME.h SymTable.h ExprTree.h CodeGen.h
+y.tab.o : y.tab.c VSME.h SymTable.h ExprTree.h CodeGen.h BigNum.h
  
 y.tab.c y.tab.h : MiniL.y
 	bison -dv -y MiniL.y

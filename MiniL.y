@@ -1,6 +1,8 @@
 %{ 
 	#include <stdio.h>
 	#include <string.h>
+
+	#include "BigNum.h"
 	#include "VSME.h"
 	#include "SymTable.h"
 	#include "ExprTree.h"
@@ -14,6 +16,7 @@
 	NP NodeP;
 	int Int;
 	double Dbl;
+	BN BigInt;
 	char *Name;
 	STP SymP;
 }
@@ -21,9 +24,12 @@
 %token DO ELSE FOR IF LAND LOR READ RETURN STATIC WRITE WHILE 
 %token <Int> ADDOP MULOP PPMM RELOP TYPE NUM CNUM
 %token <Dbl> RNUM
+%token <BigInt> BNUM
 %token <Name> ID STRING
 %token SBLOCK EBLOCK SSBRACKET ESBRACKET SBRACKET EBRACKET PERIOD EQUAL COMMA AMPERSAND EXCLAMATION
- 
+%token NI HA WO IKA NARA
+%token SUBSTITUTE
+
 
 %type <Int> type_spec decl dim_list if_part 
 %type <SymP> f_head declatr
@@ -49,8 +55,8 @@ glbl_def  :
 		  | glbl_def error PERIOD { yyerrok; }
 		  ;
 
-decl      : type_spec declatr { MemAlloc($2, $1, 0); }
-		  | type_spec f_head  { Prototype($2, $1); }
+decl      : declatr HA type_spec { MemAlloc($1, $3, 0); }
+		  | f_head HA type_spec WO RETURN   { Prototype($1, $3); }
 		  | decl COMMA declatr  { MemAlloc($3, $1, 0); }
 		  | decl COMMA f_head   { Prototype($3, $1); }
 		  ;
@@ -77,13 +83,13 @@ p_list    :
 		  | p_list COMMA p_decl
 		  ;
 
-p_decl    : TYPE declatr { MemAlloc($2, $1, PARAM); }
-		  | TYPE AMPERSAND declatr { MemAlloc($3, $1, PARAM | BYREF); }
+p_decl    : declatr HA TYPE  { MemAlloc($1, $3, PARAM); }
+		  |  AMPERSAND declatr HA TYPE { MemAlloc($2, $4, PARAM | BYREF); }
 		  ;
 
-func_def  : type_spec f_head SBLOCK { FuncDef($2, $1); FuncP = $2; GenFuncEntry($2); }
+func_def  : f_head HA type_spec WO RETURN SBLOCK { FuncDef($1, $3); FuncP = $1; GenFuncEntry($1); }
 		    decl_list
-		    st_list EBLOCK { GenReturn($2, NULL); EndFdecl($2); }
+		    st_list EBLOCK { GenReturn($1, NULL); EndFdecl($1); }
 		  ;
 
 block 	  : SBLOCK { OpenBlock(); }
@@ -103,8 +109,10 @@ stmnt     : block
 		  | PERIOD
 		  | expr PERIOD             { ExprStmnt($1); }
 		  | if_part		         { Bpatch($1, PC()); }
-		  | if_part ELSE         { $<Int>$ = PC(); Cout(JUMP, -1); Bpatch($1, PC()); }
-		    stmnt                { Bpatch($<Int>3, PC()); }
+		  | if_part ELSE NARA        { $<Int>$ = PC(); Cout(JUMP, -1); Bpatch($1, PC()); }
+		    stmnt                { Bpatch($<Int>4, PC()); }
+		  | if_part ELSE NI        { $<Int>$ = PC(); Cout(JUMP, -1); Bpatch($1, PC()); }
+		    stmnt                { Bpatch($<Int>4, PC()); }
 		  | WHILE                { $<Int>$ = PC(); }
 		  	SSBRACKET expr ESBRACKET         { $<Int>$ = CtrlExpr($4, FJ); }
 		  	stmnt                { Cout(JUMP, $<Int>2); Bpatch($<Int>6, PC()); }
@@ -116,12 +124,12 @@ stmnt     : block
 		  	stmnt WHILE
 		  	SSBRACKET expr ESBRACKET PERIOD     { Bpatch(CtrlExpr($6, TJ), $<Int>2); }
 		  | RETURN PERIOD           { GenReturn(FuncP, NULL); }
-		  | RETURN expr PERIOD      { GenReturn(FuncP, $2); }
+		  | expr WO RETURN PERIOD      { GenReturn(FuncP, $1); }
 		  | error                { yyerrok; }
 		  ;
 
-if_part   : IF SSBRACKET expr ESBRACKET      { $<Int>$ = CtrlExpr($3, FJ); }
-		  	stmnt                { $$ = $<Int>5; }
+if_part   : IF SSBRACKET expr ESBRACKET NARA      { $<Int>$ = CtrlExpr($3, FJ); }
+		  	stmnt                { $$ = $<Int>6; }
 		  ;
 
 opt_expr  :                      { $$ = NULL; }
@@ -129,6 +137,7 @@ opt_expr  :                      { $$ = NULL; }
 		  ;
 
 expr      : primary EQUAL expr     { $$ = MakeN(ASSGN, $1, $3); }
+		  | primary NI expr WO SUBSTITUTE { $$ = MakeN(ASSGN, $1, $3); }
 		  | expr LOR expr        { $$ = MakeN(OR, $1, $3); } 
 		  | expr LAND expr       { $$ = MakeN(AND, $1, $3); } 
 		  | expr RELOP expr      { $$ = MakeN(COMP, $1, $3); $$->etc = $2; } 
@@ -145,9 +154,9 @@ primary   : ADDOP primary %prec UM           { $$ = ($1 == SUB)? MakeN(CSIGN, $2
 		  | PPMM primary                     { $$ = MakeN($1, $2, NULL); $$->etc = PRE; }
 		  | primary PPMM %prec POSOP         { $$ = MakeN($2, $1, NULL); $$->etc = POST; }
 		  | EXCLAMATION primary                      { $$ = MakeN(NOT, $2, NULL); }
-		  | READ SSBRACKET primary COMMA primary ESBRACKET { $$ = MakeN(INPUT, $3, $5); }
-		  | WRITE SSBRACKET primary ESBRACKET            { $$ = MakeN(OUTSTR, $3, NULL); }
-		  | WRITE SSBRACKET primary COMMA expr ESBRACKET   { $$ = MakeN(OUTPUT, $3, $5); }
+		  | IKA WO READ SSBRACKET primary COMMA primary ESBRACKET { $$ = MakeN(INPUT, $5, $7); }
+		  | SSBRACKET primary ESBRACKET WO WRITE             { $$ = MakeN(OUTSTR, $2, NULL); }
+		  | SSBRACKET primary COMMA expr ESBRACKET WO WRITE  { $$ = MakeN(OUTPUT, $2, $4); }
 		  | ID SSBRACKET arg_list ESBRACKET              { $$ = MakeN(CALL, MakeL($1), $3); }
 		  | SSBRACKET expr ESBRACKET                     { $$ = $2; }
 		  | ID sub_list                      { $$ = MakeN(AELM, MakeL($1), $2); }

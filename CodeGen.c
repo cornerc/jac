@@ -7,6 +7,7 @@
 #define OPC(X, T) ((X)+(T)-INT)
 #define FPBIT(P) ((P->attrib) & SALLOC ? 0 : FP)
 
+
 extern char *IDentry(char *Name, int len);
 extern int StartP, DebugSW;
 
@@ -14,24 +15,6 @@ static void Cgen(NP tree), PushLval(NP tree),
 			GenArg(STP param, NP arg, int pnumber);
 static int GenCond(NP tree, int cond, int bpc),
 			GenAddrComp(STP Ap, NP subs);
-
-int BinSearch(int Table[], int n, int key)
-{
-	int high, low, mid;
-
-	low = 0;
-	high = n - 1;
-	while(low <= high){
-		mid = (low + high) / 2;
-		if(key < Table[mid])
-			high = mid - 1;
-		else if (key > Table[mid])
-			low = mid + 1;
-		else 
-			return mid;
-	}
-	return -1;
-}
 
 void GenFuncEntry(STP func)
 {
@@ -107,7 +90,7 @@ void Epilogue(void)
 	UndefCheck();
 	StartP = PC();
 	Cout(SETFR, MAX_DSEG);
-	if(sp = SymRef(IDentry("主", 3))){
+	if(sp = SymRef(IDentry("本処理", strlen("本処理")))){
 		if(sp->Nparam > 0)
 			yyerror("Parameter list specified at main()");
 		Cout(CALL, sp->loc);

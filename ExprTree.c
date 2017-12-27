@@ -8,6 +8,7 @@
 #define FMTCHK(X) { if((X)->type != C_ARY) yyerror("Illegal format specification"); }
 #define LHSCHK(X) { if((X)->Op == IDS || (X)->Op == AELM) NUMCHK(X) else yyerror("Illegal type of expression"); }
 
+
 #define DCT_SIZE 50
 DCdesc DCtbl[DCT_SIZE];
 static int NoOfDC = 0;

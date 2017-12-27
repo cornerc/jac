@@ -1,4 +1,4 @@
-#include<stdio.h>
+#include <stdio.h>
 #include "VSME.h"
 
 extern int GAptr;
@@ -235,28 +235,18 @@ int StartVSM(int StartAddr, int TraceSW)
 				continue;
 			case INPUT: S[SP-1].I = scanf(Dseg+S[SP-1].I, Dseg+S[SP].I);
 				break;
-			/*case OUTPUT: printf(Dseg+S[SP-1].I, S[SP].D);
-				SP -= 2;
-				continue;*/
-			/*case OUTPUT: 
-				printf("%s", Dseg+S[SP-1].I);
-                printf("S[SP].D = %f\n", S[SP].D);
-                printf("S[SP].I = %d\n", S[SP].I);
-                SP -= 2;
-                continue;*/
-             case OUTPUT: 
-             //整数型が正しく表示されない不具合を修正 2017/10
-				if(IntOrFloat(Dseg+S[SP-1].I) == 0)
-					printf(Dseg+S[SP-1].I, S[SP].D);
-				else
+            case OUTPUT:
+				if(IntOrFloat(Dseg+S[SP-1].I) == 1){
 					printf(Dseg+S[SP-1].I, S[SP].I);
+				} else {
+					printf(Dseg+S[SP-1].I, S[SP].D);
+				}
                 SP -= 2;
                 continue;
 			case OUTSTR: printf(Dseg+S[SP--].I);
 				continue;
 			default:
 				printf("Illegal Op. code at location %d\n", Pctr); return -1;
-				
 		}
 		SP--;
 	}
@@ -277,16 +267,6 @@ void ExecReport(void){
 	printf("Exection Count: %10d ins. \n\n", InsCount);
 }
 
-// int IntOrFloat(char *str){
-// 	int len = strlen(str) - 2;
-// 	if(str[len] == 'd')
-// 		return 1;
-// 	else if(str[len] == 'f')
-// 		return 0;
-// 	else
-// 		printf("エラー\n");
-// 	return 0;
-// }
 
 int IntOrFloat(char *str){
 	
@@ -294,15 +274,13 @@ int IntOrFloat(char *str){
 
 	//printf("::%s\n", str);
 
-	for(c = *str; c != '\0'; c++){
-		if(c == '%'){
-			if(c+1 == 'd')
-				return 1;
-			else if(c+1 == 'f')
-				return 0;
-		}
+	if(strstr(str, "%d") != NULL){
+		return 1;
+	}else if(strstr(str, "%f") != NULL){
+		return 0;
+	}else{
+		return -1;
 	}
-	return -1;
 	
 }
 
