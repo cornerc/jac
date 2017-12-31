@@ -22,8 +22,6 @@ char *IDentry(char *sp, int len)
 	for (np = IDtable[hval]; np != NULL; np = np->next)
 		if((np->len)==len && strcmp(np->name_ptr, sp)==0)
 			return np->name_ptr;
-	//printf("id = %s\n", sp);
-	//printf("id_len = %d\n", len);
 	np = (ID_entry *)malloc(sizeof(ID_entry));
 	np->name_ptr = (char *)malloc(len + 1);
 	np->len = len;

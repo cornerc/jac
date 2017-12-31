@@ -2,7 +2,6 @@
 	#include <stdio.h>
 	#include <string.h>
 
-	#include "BigNum.h"
 	#include "VSME.h"
 	#include "SymTable.h"
 	#include "ExprTree.h"
@@ -16,7 +15,6 @@
 	NP NodeP;
 	int Int;
 	double Dbl;
-	BN BigInt;
 	char *Name;
 	STP SymP;
 }
@@ -24,7 +22,6 @@
 %token DO ELSE FOR IF LAND LOR READ RETURN STATIC WRITE WHILE 
 %token <Int> ADDOP MULOP PPMM RELOP TYPE NUM CNUM
 %token <Dbl> RNUM
-%token <BigInt> BNUM
 %token <Name> ID STRING
 %token SBLOCK EBLOCK SSBRACKET ESBRACKET SBRACKET EBRACKET PERIOD EQUAL COMMA AMPERSAND EXCLAMATION
 %token NI HA WO IKA NARA

@@ -68,7 +68,6 @@ static STP LookUp(char *Name)
 {
 	STP p = Htbl[SHF(Name)];
 
-	//printf("%d\n", SHF(Name));
 
 	for(; p!= NULL && p->name != Name; p = p->h_chain);
 	return p;

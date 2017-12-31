@@ -272,8 +272,6 @@ int IntOrFloat(char *str){
 	
 	char c;
 
-	//printf("::%s\n", str);
-
 	if(strstr(str, "%d") != NULL){
 		return 1;
 	}else if(strstr(str, "%f") != NULL){

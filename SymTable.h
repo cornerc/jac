@@ -1,5 +1,5 @@
 typedef enum {NEWSYM, FUNC, F_PROT, VAR} Class;
-typedef enum {VOID, CHAR, INT, DBL, BIGINT, ARY=0x10, C_ARY,} Dtype;
+typedef enum {VOID, CHAR, INT, DBL, ARY=0x10, C_ARY,} Dtype;
 
 typedef struct STentry{
 	unsigned char type, class, attrib, deflvl, dim, Nparam;
